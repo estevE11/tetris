@@ -1,5 +1,5 @@
 var canvas, ctx,
-width = 500, height = 700,
+width = 700, height = 700,
 board_width = 10, board_height = 20,
 
 
@@ -123,7 +123,8 @@ board = {
 },
 
 piece = {
-    id: 0,
+    id: null,
+    next_id: 1,
     x: 0,
     y: 0,
     w: 30,
@@ -132,9 +133,9 @@ piece = {
     pred_y: 0,
 
     on_create: function() {
-        let last_id = this.id;
-        while(this.id == last_id)
-            this.id = Math.floor(Math.random() * 7);;
+        this.id = this.next_id;
+        while(this.next_id == this.id)
+            this.next_id = Math.floor(Math.random() * 7);
         this.mat = JSON.parse(JSON.stringify(pieces[this.id]));
         this.y = 0;
         this.x = Math.floor(Math.random()*6);
@@ -148,13 +149,22 @@ piece = {
         }
         this.y++;
     },
-
+    
     render: function() {
-        let w = this.mat.length;
-        for(y = 0; y < w; y++) {
-            for(x = 0; x < w; x++) {
-                if(this.mat[y][x] === 1) {
-                    render_tile((this.x + x)*this.w, (this.y + y)*this.w, this.id+1);
+        this.render_mat(this.id, this.mat, this.x, this.y);
+    },
+
+    render_next: function(x, y) {
+        let m = pieces[this.next_id];
+        this.render_mat(this.next_id, m, x, y);
+    },
+
+    render_mat: function(id, m, x, y) {
+        let w = m.length;
+        for(yy = 0; yy < w; yy++) {
+            for(xx = 0; xx < w; xx++) {
+                if(m[yy][xx] === 1) {
+                    render_tile((x + xx)*this.w, (y + yy)*this.w, id+1);
                 }
             }
         }
@@ -265,10 +275,12 @@ piece = {
 
 function init() {
     canvas = document.createElement('canvas');
-    canvas.width = 500;
-    canvas.height = 700;
+    canvas.width = width;
+    canvas.height = height;
     ctx = canvas.getContext('2d');
-    document.body.appendChild(canvas);
+    let center = document.createElement("center");
+    center.appendChild(canvas);
+    document.body.appendChild(center);
 
     document.addEventListener('keydown', key_down);
 
@@ -316,6 +328,7 @@ function render() {
         render_text('Press "space" to start', 80, 350, 36, 'black');
     } else if(curr_game_state == game_state_ingame) {
         piece.render();
+        piece.render_next(11, 0);
     } else if(curr_game_state == game_state_endscreen) {
         ctx.fillStyle = col(255, 255, 255, 0.5);
         ctx.fillRect(0, 0, width, height);
